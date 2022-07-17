@@ -1,0 +1,3 @@
+[submodule "external/cm256"]
+	path = external/cm256
+	url = https://github.com/catid/cm256
