@@ -7,10 +7,11 @@
 // Benchmark CM256 library, return false if anything failed
 bool bench_cm256(ECC_bench_params params)
 {
+    printf("CM256:\n");
     uint64_t encode_time = 0, decode_time = 0;  // Total encode/decode times
 
     if (cm256_init()) {
-        printf("cm256_init failed\n");
+        printf("  cm256_init failed\n");
         return false;
     }
 
@@ -19,8 +20,7 @@ bool bench_cm256(ECC_bench_params params)
     uint8_t* recoveryBlocks = new uint8_t[params.RecoveryCount * params.BlockBytes];
 
     // Repeat benchmark multiple times to improve its accuracy
-    const int trials = 1000;
-    for (int trial = 0; trial < trials; ++trial)
+    for (int trial = 0; trial < params.Trials; ++trial)
     {
         // Fill the original file data
         for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
@@ -38,7 +38,7 @@ bool bench_cm256(ECC_bench_params params)
         // Generate recovery data
         if (cm256_encode(params, blocks, recoveryBlocks))
         {
-            printf("cm256_encode failed\n");
+            printf("  cm256_encode failed\n");
             return false;
         }
         uint64_t t1 = siamese::GetTimeUsec();
@@ -58,7 +58,7 @@ bool bench_cm256(ECC_bench_params params)
         t0 = siamese::GetTimeUsec();
         if (cm256_decode(params, blocks))
         {
-            printf("cm256_decode failed\n");
+            printf("  cm256_decode failed\n");
             return false;
         }
         t1 = siamese::GetTimeUsec();
@@ -68,14 +68,14 @@ bool bench_cm256(ECC_bench_params params)
     }
 
     {
-        const double opusec = double(encode_time) / trials;
+        const double opusec = double(encode_time) / params.Trials;
         const double mbps = params.OriginalFileBytes() / opusec;
-        printf("%.0lf usec, %.0lf MB/s\n", opusec, mbps);
+        printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
     {
-        const double opusec = double(decode_time) / trials;
+        const double opusec = double(decode_time) / params.Trials;
         const double mbps = params.OriginalFileBytes() / opusec;
-        printf("%.0lf usec, %.0lf MB/s\n", opusec, mbps);
+        printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
 
     delete[] originalFileData;

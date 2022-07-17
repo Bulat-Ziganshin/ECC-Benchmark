@@ -4,6 +4,9 @@
 
 struct ECC_bench_params : cm256_encoder_params
 {
+    // Repeat benchmark multiple times to improve its accuracy
+    int Trials;
+
     // Size of the original file
     size_t OriginalFileBytes() { return OriginalCount * BlockBytes;}
 };
