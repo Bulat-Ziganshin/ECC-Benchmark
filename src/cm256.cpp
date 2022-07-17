@@ -6,38 +6,14 @@
 #include "common.h"
 
 
-// Benchmark CM256 library, return false if anything failed
-bool bench_cm256(ECC_bench_params params)
+// Perform encoding and decoding operations, return false if anything failed
+bool cm256_run_trials(
+    ECC_bench_params params,
+    uint8_t* originalFileData,
+    uint8_t* recoveryBlocks,
+    uint64_t& encode_time,
+    uint64_t& decode_time)
 {
-    uint64_t encode_time = 0, decode_time = 0;  // Total encode/decode times
-
-    if (cm256_init()) {
-        printf("cm256_init failed\n");
-        return false;
-    }
-
-    printf("CM256 (%s, %d-bit):\n",
-#ifdef GF256_TRY_AVX2
-        CpuHasAVX2? "avx2":
-#endif
-        CpuHasSSSE3? "ssse3":
-#if defined(GF256_TRY_NEON)
-        CpuHasNeon64? "neon64":
-        CpuHasNeon? "neon":
-#endif
-        "", sizeof(size_t)*8);
-
-    // Allocate the original file data and recovery data
-    auto original = std::make_unique<uint8_t[]>(params.OriginalFileBytes());
-    auto recovery = std::make_unique<uint8_t[]>(params.RecoveryCount * params.BlockBytes);
-    auto originalFileData = original.get();
-    auto recoveryBlocks = recovery.get();
-
-    // Fill the original file data
-    for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
-        originalFileData[i] = (uint8_t)((i*123456791) >> 13);
-    }
-
     // Repeat benchmark multiple times to improve its accuracy
     for (int trial = 0; trial < params.Trials; ++trial)
     {
@@ -81,6 +57,34 @@ bool bench_cm256(ECC_bench_params params)
         // blocks[0].Index will now be 0.
     }
 
+    return true;
+}
+
+
+// Print the benchmark results, return false if anything failed
+bool cm256_print_results(
+    ECC_bench_params params,
+    uint8_t* originalFileData,
+    uint8_t* recoveryBlocks)
+{
+    uint64_t encode_time = 0, decode_time = 0;  // Total encode/decode times
+
+    printf("CM256 (%s, %d-bit):\n",
+#ifdef GF256_TRY_AVX2
+        CpuHasAVX2? "avx2":
+#endif
+        CpuHasSSSE3? "ssse3":
+#if defined(GF256_TRY_NEON)
+        CpuHasNeon64? "neon64":
+        CpuHasNeon? "neon":
+#endif
+        "", sizeof(size_t)*8);
+
+    if (! cm256_run_trials(params, originalFileData, recoveryBlocks, encode_time, decode_time))
+    {
+        return false;
+    }
+
     {
         const double opusec = double(encode_time) / params.Trials;
         const double mbps = params.OriginalFileBytes() / opusec;
@@ -88,9 +92,33 @@ bool bench_cm256(ECC_bench_params params)
     }
     {
         const double opusec = double(decode_time) / params.Trials;
-        const double mbps = params.OriginalFileBytes() / opusec;
+        const double mbps = params.BlockBytes / opusec;
         printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
 
     return true;
+}
+
+
+// Benchmark CM256 library, return false if anything failed.
+// This function allocates and initializes memory buffers used in encode/decode
+bool cm256_benchmark_main(ECC_bench_params params)
+{
+    if (cm256_init()) {
+        printf("cm256_init failed\n");
+        return false;
+    }
+
+    // Allocate the original file data and recovery data
+    auto original = std::make_unique<uint8_t[]>(params.OriginalFileBytes());
+    auto recovery = std::make_unique<uint8_t[]>(params.RecoveryCount * params.BlockBytes);
+    auto originalFileData = original.get();
+    auto recoveryBlocks = recovery.get();
+
+    // Fill the original file data
+    for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
+        originalFileData[i] = (uint8_t)((i*123456791) >> 13);
+    }
+
+    return cm256_print_results(params, originalFileData, recoveryBlocks);
 }

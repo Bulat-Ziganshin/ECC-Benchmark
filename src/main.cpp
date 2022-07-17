@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         params.OriginalCount, params.RecoveryCount, params.BlockBytes, params.Trials);
 
     // Benchmark CM256 library
-    bench_cm256(params);
+    cm256_benchmark_main(params);
 
     return 0;
 }

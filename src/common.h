@@ -13,4 +13,4 @@ struct ECC_bench_params : cm256_encoder_params
 
 
 // Benchmark CM256 library, return false if anything failed
-bool bench_cm256(ECC_bench_params params);
+bool cm256_benchmark_main(ECC_bench_params params);
