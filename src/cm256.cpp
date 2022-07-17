@@ -1,19 +1,30 @@
 #include <cstdio>
 
-#include "cm256.h"
+#include "../src/gf256.cpp"
+
 #include "common.h"
 
 
 // Benchmark CM256 library, return false if anything failed
 bool bench_cm256(ECC_bench_params params)
 {
-    printf("CM256:\n");
     uint64_t encode_time = 0, decode_time = 0;  // Total encode/decode times
 
     if (cm256_init()) {
-        printf("  cm256_init failed\n");
+        printf("cm256_init failed\n");
         return false;
     }
+
+    printf("CM256 (%s):\n",
+#ifdef GF256_TRY_AVX2
+        CpuHasAVX2? "avx2":
+#endif
+        CpuHasSSSE3? "ssse3":
+#if defined(GF256_TRY_NEON)
+        CpuHasNeon64? "neon64":
+        CpuHasNeon? "neon":
+#endif
+        sizeof(size_t) >= 8? "scalar 64-bit" : "scalar 32-bit");
 
     // Allocate the original file data and recovery data
     uint8_t* originalFileData = new uint8_t[params.OriginalFileBytes()];
