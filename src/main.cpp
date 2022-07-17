@@ -1,10 +1,18 @@
 #include <cstdio>
+#include <thread>
 #include "common.h"
 
 #include "../unit_test/SiameseTools.cpp"
 
 int main(int argc, char** argv)
 {
+    // Increase process/thread priorities to ensure repeatable results
+#ifdef _WIN32
+    ::SetPriorityClass(::GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+#endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     ECC_bench_params params;
 
     // Number of bytes per file block
