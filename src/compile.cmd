@@ -1,0 +1,1 @@
+g++ -mavx2 -mtune=skylake -O2 -s main.cpp cm256.cpp -I../external/cm256/include ../external/cm256/src/gf256.cpp ../external/cm256/src/cm256.cpp
