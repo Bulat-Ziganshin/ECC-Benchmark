@@ -1,9 +1,30 @@
-# ECC-Benchmark
 Comparison of leading error-correcting code implementations
 
-First results on i7-8665U (skylake running at 3.3-4.3 GHz):
+We plan to compare:
+- O(N^2) Reed-Solomon codecs:
+  - [x] [CM256](https://github.com/catid/cm256) - GF(2^8)
+  - [ ] [Intel ISA-L](https://github.com/intel/isa-l) - GF(2^8)
+- O(N*log(N)) Reed-Solomon codecs:
+  - [ ] [Leopard](https://github.com/catid/leopard) - uses [FWHT](https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform) in GF(2^8) or GF(2^16), up to 2^16 blocks, data blocks >= parity blocks
+  - [ ] [FastECC](https://github.com/Bulat-Ziganshin/FastECC) - uses FFT in GF(p), up to 2^63 blocks
+- O(N) non-MDS codecs:
+  - [ ] [Wirehair](https://github.com/catid/wirehair) - fountain code, up to 64000 data blocks
 
-CM256 (avx2):
-- 50+50, 64KB: 624 MB/s
-- 80+20, 64KB: 1411 MB/s
-- 20+20, 64KB: 1357 MB/s
+Also:
+- CM256, Leopard and Wirehair provides AVX2/SSSE3/Neon64/Neon-optimized code paths
+- Intel ISA-L provides AVX512/AVX2/AVX/SSSE3/Neon/SVE/VSX-optimized code paths
+- FastECC provides AVX2/SSE4-optimized code paths
+
+So far, the benchmark is single-threaded. Leopard and FastECC have built-in OpenMP support, which may be enabled in later benchmark versions.
+
+
+## Results
+
+First results on i7-8665U (skylake running at 3.3-4.5 GHz).
+
+CM256 (avx2), encoding speed in terms of original data processed (best runs):
+- 50+50: 575 MB/s
+- 80+20: 1411 MB/s
+- 20+20: 1505 MB/s
+
+80+20 means 80 data blocks and 20 parity blocks. Each block contains 64 KB.
