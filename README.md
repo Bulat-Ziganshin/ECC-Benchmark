@@ -29,8 +29,8 @@ Notes:
 First results on i7-8665U (skylake running at 3.3-4.5 GHz).
 
 CM256 (avx2), encoding:
-- 200+50: 633 MB/s
-- 50+50: 600 MB/s
+- 200+50: 640 MB/s
+- 50+50: 619 MB/s
 - 80+20: 1634 MB/s
 - 20+20: 1595 MB/s
 

@@ -33,14 +33,14 @@ bool bench_cm256(ECC_bench_params params)
     auto originalFileData = original.get();
     auto recoveryBlocks = recovery.get();
 
+    // Fill the original file data
+    for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
+        originalFileData[i] = (uint8_t)((i*123456791) >> 13);
+    }
+
     // Repeat benchmark multiple times to improve its accuracy
     for (int trial = 0; trial < params.Trials; ++trial)
     {
-        // Fill the original file data
-        for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
-            originalFileData[i] = (uint8_t)((i*123456791) >> 13);
-        }
-
         // Pointers to data
         cm256_block blocks[256];
         for (int i = 0; i < params.OriginalCount; ++i)
