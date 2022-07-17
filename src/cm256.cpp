@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 
 #include "../src/gf256.cpp"
 
@@ -15,7 +16,7 @@ bool bench_cm256(ECC_bench_params params)
         return false;
     }
 
-    printf("CM256 (%s):\n",
+    printf("CM256 (%s, %d-bit):\n",
 #ifdef GF256_TRY_AVX2
         CpuHasAVX2? "avx2":
 #endif
@@ -24,11 +25,13 @@ bool bench_cm256(ECC_bench_params params)
         CpuHasNeon64? "neon64":
         CpuHasNeon? "neon":
 #endif
-        sizeof(size_t) >= 8? "scalar 64-bit" : "scalar 32-bit");
+        "", sizeof(size_t)*8);
 
     // Allocate the original file data and recovery data
-    uint8_t* originalFileData = new uint8_t[params.OriginalFileBytes()];
-    uint8_t* recoveryBlocks = new uint8_t[params.RecoveryCount * params.BlockBytes];
+    auto original = std::make_unique<uint8_t[]>(params.OriginalFileBytes());
+    auto recovery = std::make_unique<uint8_t[]>(params.RecoveryCount * params.BlockBytes);
+    auto originalFileData = original.get();
+    auto recoveryBlocks = recovery.get();
 
     // Repeat benchmark multiple times to improve its accuracy
     for (int trial = 0; trial < params.Trials; ++trial)
@@ -89,7 +92,5 @@ bool bench_cm256(ECC_bench_params params)
         printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
 
-    delete[] originalFileData;
-    delete[] recoveryBlocks;
     return true;
 }
