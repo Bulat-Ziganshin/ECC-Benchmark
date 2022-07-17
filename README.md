@@ -20,11 +20,22 @@ So far, the benchmark is single-threaded. Leopard and FastECC have built-in Open
 
 ## Results
 
+Notes:
+- Best runs are selected
+- Encoding speeds are measured in terms of original data processed
+- Block sizes for each run were optimized to fit all data into L3 cache
+- 80+20 means 80 data blocks and 20 parity blocks
+
 First results on i7-8665U (skylake running at 3.3-4.5 GHz).
 
-CM256 (avx2), encoding speed in terms of original data processed (best runs):
-- 50+50: 575 MB/s
-- 80+20: 1411 MB/s
-- 20+20: 1505 MB/s
+CM256 (avx2), encoding:
+- 200+50: 633 MB/s
+- 50+50: 600 MB/s
+- 80+20: 1634 MB/s
+- 20+20: 1595 MB/s
 
-80+20 means 80 data blocks and 20 parity blocks. Each block contains 64 KB.
+CM256 (ssse3), encoding:
+- 200+50: 334 MB/s
+- 50+50: 338 MB/s
+- 80+20: 872 MB/s
+- 20+20: 872 MB/s
