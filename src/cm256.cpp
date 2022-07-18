@@ -11,7 +11,7 @@ bool cm256_benchmark_encode(
     ECC_bench_params params,
     uint8_t* originalFileData,
     uint8_t* recoveryBlocks,
-    uint64_t& encode_time)
+    OperationTimer& encode_time)
 {
     // Pointers to data
     cm256_block blocks[256];
@@ -20,15 +20,14 @@ bool cm256_benchmark_encode(
         blocks[i].Block = originalFileData + i * params.BlockBytes;
     }
 
-    uint64_t t0 = siamese::GetTimeUsec();
+    encode_time.BeginCall();
     // Generate recovery data
     if (cm256_encode(params, blocks, recoveryBlocks))
     {
         printf("  cm256_encode failed\n");
         return false;
     }
-    uint64_t t1 = siamese::GetTimeUsec();
-    encode_time += t1 - t0;
+    encode_time.EndCall();
 
     return true;
 }
@@ -39,7 +38,7 @@ bool cm256_benchmark_decode_one_block(
     ECC_bench_params params,
     uint8_t* originalFileData,
     uint8_t* recoveryBlocks,
-    uint64_t& decode_time)
+    OperationTimer& decode_time)
 {
     // Pointers to data
     cm256_block blocks[256];
@@ -57,14 +56,13 @@ bool cm256_benchmark_decode_one_block(
     blocks[0].Index = cm256_get_recovery_block_index(params, lostBlock); // A recovery block index
     //// Simulate loss of data, subsituting a recovery block in its place ////
 
-    uint64_t t0 = siamese::GetTimeUsec();
+    decode_time.BeginCall();
     if (cm256_decode(params, blocks))
     {
         printf("  cm256_decode failed\n");
         return false;
     }
-    uint64_t t1 = siamese::GetTimeUsec();
-    decode_time += t1 - t0;
+    decode_time.EndCall();
 
     // blocks[0].Index will now be = lostBlock
     // and blocks[0].Block overwritten with recovered data
@@ -78,7 +76,7 @@ bool cm256_benchmark_decode_all_blocks(
     ECC_bench_params params,
     uint8_t* originalFileData,
     uint8_t* recoveryBlocks,
-    uint64_t& decode_time)
+    OperationTimer& decode_time)
 {
     // Pointers to data
     cm256_block blocks[256];
@@ -96,14 +94,13 @@ bool cm256_benchmark_decode_all_blocks(
         }
     }
 
-    uint64_t t0 = siamese::GetTimeUsec();
+    decode_time.BeginCall();
     if (cm256_decode(params, blocks))
     {
         printf("  cm256_decode failed\n");
         return false;
     }
-    uint64_t t1 = siamese::GetTimeUsec();
-    decode_time += t1 - t0;
+    decode_time.EndCall();
 
     // For each i,
     //   blocks[i].Index will now be = cm256_get_original_block_index(params, i)
@@ -121,7 +118,7 @@ bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
     auto recoveryBlocks   = buffer + params.OriginalFileBytes();
 
     // Total encode/decode times
-    uint64_t encode_time = 0, decode_one_time = 0, decode_all_time = 0;
+    OperationTimer encode_time, decode_one_time, decode_all_time;
 
     if (cm256_init()) {
         printf("cm256_init failed\n");
@@ -160,21 +157,10 @@ bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         }
     }
 
-    {
-        const double opusec = double(encode_time) / (params.Trials * 2);
-        const double mbps = params.OriginalFileBytes() / opusec;
-        printf("  encode: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
-    }
-    {
-        const double opusec = double(decode_one_time) / params.Trials;
-        const double mbps = params.BlockBytes / opusec;
-        printf("  decode one: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
-    }
-    {
-        const double opusec = double(decode_all_time) / params.Trials;
-        const double mbps = params.RecoveryCount * params.BlockBytes / opusec;
-        printf("  decode all: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
-    }
+    // Benchmark reports for each operation
+    encode_time.Print("encode", params.OriginalFileBytes());
+    decode_one_time.Print("decode one", params.BlockBytes);
+    decode_all_time.Print("decode all", params.RecoveryDataBytes());
 
     return true;
 }

@@ -4,6 +4,9 @@
 
 #include "../unit_test/SiameseTools.cpp"
 
+#define SSE_ALIGNMENT 16
+#define align_up(value, ALIGNMENT) ((((value) + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
+
 
 // Parse ECC parameters from cmdline
 ECC_bench_params parse_cmdline(int argc, char** argv)
@@ -27,6 +30,10 @@ ECC_bench_params parse_cmdline(int argc, char** argv)
     if (argc>2)  params.RecoveryCount = atoi(argv[2]);
     if (argc>3)  params.BlockBytes    = atoi(argv[3]);
     if (argc>4)  params.Trials        = atoi(argv[4]);
+
+    // Round up for SSE compatibility
+    params.BlockBytes = align_up(params.BlockBytes, SSE_ALIGNMENT);
+
     printf("Params: data_blocks=%d parity_blocks=%d chunk_size=%d trials=%d\n",
         params.OriginalCount, params.RecoveryCount, params.BlockBytes, params.Trials);
 
@@ -46,6 +53,7 @@ void occupy_cpu_core()
 }
 
 
+// Benchmark all libraries using parameters provided on cmdline
 int main(int argc, char** argv)
 {
     // Setup benchmark configuration based on cmdline options
@@ -54,9 +62,15 @@ int main(int argc, char** argv)
     // Alloc single buffer large enough for any operation in any tested library
     size_t bufsize = params.OriginalFileBytes() + params.RecoveryDataBytes()
                      ;
-    auto buffer = new uint8_t[bufsize];
+    auto buffer = new uint8_t[bufsize + SSE_ALIGNMENT];
 
-    // Fill the original file data
+    // Align buffer start to SSE-compatible boundary
+    buffer = (uint8_t*) align_up(uintptr_t(buffer), SSE_ALIGNMENT);
+
+    // Fill place allocated for the file contents with random numbers.
+    // It's critical to fill it with non-repeating data
+    // since many libraries rely on table lookups
+    // and can get unfair speedup on repeated data.
     for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
         buffer[i] = (uint8_t)((i*123456791) >> 13);
     }
