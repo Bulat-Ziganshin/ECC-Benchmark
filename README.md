@@ -47,3 +47,50 @@ CM256:
 | 50+50    |     346 MB/s |      339 MB/s |      352 MB/s |
 | 80+20    |     882 MB/s |      212 MB/s |      219 MB/s |
 | 20+20    |     892 MB/s |      866 MB/s |      892 MB/s |
+
+
+## Conclusions
+
+### Recovery speed
+
+In O(N^2) RS algos, recovery of multiple blocks is just
+recovery of a single block performed multiple times.
+Thus, speed per block is the same (modulo setup time).
+More concrete, for K data blocks, M parity blocks,
+and blocksize B, encoding time is `O(K*M*B)`.
+Decoding L lost blocks will take `O(K*L*B)`
+(it combines K survived blocks to recompute each lost block).
+
+But in fast RS algos, single block recovery requires almost
+the same amount of work as recovery of all lost blocks
+in the worst case, since FFT+IFFT steps don't depend on
+the amount of blocks we are going to recover.
+
+Thus, matrix algorithms will always be faster for recovery
+of only one or few missing blocks
+
+We can counterfight that by using matrix computations
+for small recoveries in fast algos too. At least it's
+possible for FastECC. This requires computation of
+Newton polynomial thus O(N^2) divisions - but it probably
+is still faster than O(B\*N\*log(N)) multiplications
+required for full decoding.
+
+
+### Precomputed tables
+
+ISA-L API is more low-level - you can compute encoding tables
+just once and use them in multiple calls. It's especially
+important when we want to process a stream with many gigabytes
+using just a few megabytes of memory.
+
+Moreover, it may be possible to use CM256-computed tables with ISA-L.
+They have [two advantages](https://github.com/catid/cm256#comparisons-with-other-libraries) over ISA-L tables:
+- first parity block is just XOR of all data blocks
+- recovery tables are computed faster
+
+When encoding or decoding operations with the same parameters
+are repeated multiple times, it can make sense to keep cache
+of such tables in order to avoid costly initialization.
+The most obvious example is recovery of data of missed node
+in ECC-protected distributed storage like [Codex](https://github.com/status-im/nim-codex).
