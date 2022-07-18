@@ -6,7 +6,7 @@
 #include "common.h"
 
 
-// Perform single encoding operation, return false if it failed
+// Perform single encoding operation, return false if it fails
 bool cm256_benchmark_encode(
     ECC_bench_params params,
     uint8_t* originalFileData,
@@ -34,8 +34,8 @@ bool cm256_benchmark_encode(
 }
 
 
-// Perform single decoding operation, return false if it failed
-bool cm256_benchmark_decode(
+// Perform single operation decoding single lost block, return false if it fails
+bool cm256_benchmark_decode_one_block(
     ECC_bench_params params,
     uint8_t* originalFileData,
     uint8_t* recoveryBlocks,
@@ -67,7 +67,47 @@ bool cm256_benchmark_decode(
     decode_time += t1 - t0;
 
     // blocks[0].Index will now be = lostBlock
-    // and blocks[0].Block overwritten with recovered data.
+    // and blocks[0].Block overwritten with recovered data
+
+    return true;
+}
+
+
+// Perform single operation decoding as much blocks as possible, return false if it fails
+bool cm256_benchmark_decode_all_blocks(
+    ECC_bench_params params,
+    uint8_t* originalFileData,
+    uint8_t* recoveryBlocks,
+    uint64_t& decode_time)
+{
+    // Pointers to data
+    cm256_block blocks[256];
+
+    // Initialize the indices for recovery operation
+    for (int i = 0; i < params.OriginalCount; ++i)
+    {
+        if (i < params.RecoveryCount) {
+            // Simulate loss of data, subsituting a recovery block in its place
+            blocks[i].Block = recoveryBlocks + i * params.BlockBytes;       // recovery block
+            blocks[i].Index = cm256_get_recovery_block_index(params, i);    // recovery block index
+        } else {
+            blocks[i].Block = originalFileData + i * params.BlockBytes;     // data block
+            blocks[i].Index = cm256_get_original_block_index(params, i);    // data block index
+        }
+    }
+
+    uint64_t t0 = siamese::GetTimeUsec();
+    if (cm256_decode(params, blocks))
+    {
+        printf("  cm256_decode failed\n");
+        return false;
+    }
+    uint64_t t1 = siamese::GetTimeUsec();
+    decode_time += t1 - t0;
+
+    // For each i,
+    //   blocks[i].Index will now be = cm256_get_original_block_index(params, i)
+    //   and blocks[i].Block overwritten with recovered data of this block
 
     return true;
 }
@@ -79,7 +119,8 @@ bool cm256_benchmark_print_results(
     uint8_t* originalFileData,
     uint8_t* recoveryBlocks)
 {
-    uint64_t encode_time = 0, decode_time = 0;  // Total encode/decode times
+    // Total encode/decode times
+    uint64_t encode_time = 0, decode_one_time = 0, decode_all_time = 0;
 
     if (cm256_init()) {
         printf("cm256_init failed\n");
@@ -107,20 +148,31 @@ bool cm256_benchmark_print_results(
         if (! cm256_benchmark_encode(params, originalFileData, recoveryBlocks, encode_time)) {
             return false;
         }
-        if (! cm256_benchmark_decode(params, originalFileData, recoveryBlocks, decode_time)) {
+        if (! cm256_benchmark_decode_one_block(params, originalFileData, recoveryBlocks, decode_one_time)) {
+            return false;
+        }
+        if (! cm256_benchmark_encode(params, originalFileData, recoveryBlocks, encode_time)) {
+            return false;
+        }
+        if (! cm256_benchmark_decode_all_blocks(params, originalFileData, recoveryBlocks, decode_all_time)) {
             return false;
         }
     }
 
     {
-        const double opusec = double(encode_time) / params.Trials;
+        const double opusec = double(encode_time) / (params.Trials * 2);
         const double mbps = params.OriginalFileBytes() / opusec;
-        printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
+        printf("  encode: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
     {
-        const double opusec = double(decode_time) / params.Trials;
+        const double opusec = double(decode_one_time) / params.Trials;
         const double mbps = params.BlockBytes / opusec;
-        printf("  %.0lf usec, %.0lf MB/s\n", opusec, mbps);
+        printf("  decode one: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
+    }
+    {
+        const double opusec = double(decode_all_time) / params.Trials;
+        const double mbps = params.RecoveryCount * params.BlockBytes / opusec;
+        printf("  decode all: %.0lf usec, %.0lf MB/s\n", opusec, mbps);
     }
 
     return true;
