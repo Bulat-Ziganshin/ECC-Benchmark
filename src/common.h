@@ -9,8 +9,11 @@ struct ECC_bench_params : cm256_encoder_params
 
     // Size of the original file
     size_t OriginalFileBytes() { return OriginalCount * BlockBytes;}
+
+    // Size of the original file
+    size_t RecoveryDataBytes() { return RecoveryCount * BlockBytes;}
 };
 
 
-// Benchmark CM256 library, return false if anything failed
-bool cm256_benchmark_main(ECC_bench_params params);
+// Benchmark each library and print results, return false if anything failed
+bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer);

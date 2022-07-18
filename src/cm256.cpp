@@ -113,12 +113,13 @@ bool cm256_benchmark_decode_all_blocks(
 }
 
 
-// Print the benchmark results, return false if anything failed
-bool cm256_benchmark_print_results(
-    ECC_bench_params params,
-    uint8_t* originalFileData,
-    uint8_t* recoveryBlocks)
+// Benchmark CM256 library and print results, return false if anything failed
+bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
 {
+    // Places for original and parity data
+    auto originalFileData = buffer;
+    auto recoveryBlocks   = buffer + params.OriginalFileBytes();
+
     // Total encode/decode times
     uint64_t encode_time = 0, decode_one_time = 0, decode_all_time = 0;
 
@@ -176,23 +177,4 @@ bool cm256_benchmark_print_results(
     }
 
     return true;
-}
-
-
-// Benchmark CM256 library, return false if anything failed.
-// This function allocates and initializes memory buffers used in encode/decode
-bool cm256_benchmark_main(ECC_bench_params params)
-{
-    // Allocate the original file data and recovery data
-    auto original = std::make_unique<uint8_t[]>(params.OriginalFileBytes());
-    auto recovery = std::make_unique<uint8_t[]>(params.RecoveryCount * params.BlockBytes);
-    auto originalFileData = original.get();
-    auto recoveryBlocks = recovery.get();
-
-    // Fill the original file data
-    for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
-        originalFileData[i] = (uint8_t)((i*123456791) >> 13);
-    }
-
-    return cm256_benchmark_print_results(params, originalFileData, recoveryBlocks);
 }

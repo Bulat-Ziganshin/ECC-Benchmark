@@ -4,15 +4,10 @@
 
 #include "../unit_test/SiameseTools.cpp"
 
-int main(int argc, char** argv)
-{
-    // Increase process/thread priorities to ensure repeatable results
-#ifdef _WIN32
-    ::SetPriorityClass(::GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-#endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+// Parse ECC parameters from cmdline
+ECC_bench_params parse_cmdline(int argc, char** argv)
+{
     ECC_bench_params params;
 
     // Number of blocks
@@ -35,8 +30,40 @@ int main(int argc, char** argv)
     printf("Params: data_blocks=%d parity_blocks=%d chunk_size=%d trials=%d\n",
         params.OriginalCount, params.RecoveryCount, params.BlockBytes, params.Trials);
 
-    // Benchmark CM256 library
-    cm256_benchmark_main(params);
+    return params;
+}
+
+
+// Try to seize a CPU core into exclusive use by this thread
+void occupy_cpu_core()
+{
+    // Increase process/thread priorities to ensure repeatable results
+#ifdef _WIN32
+    ::SetPriorityClass(::GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+#endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+
+int main(int argc, char** argv)
+{
+    // Setup benchmark configuration based on cmdline options
+    ECC_bench_params params = parse_cmdline(argc, argv);
+
+    // Alloc single buffer large enough for any operation in any tested library
+    size_t bufsize = params.OriginalFileBytes() + params.RecoveryDataBytes()
+                     ;
+    auto buffer = new uint8_t[bufsize];
+
+    // Fill the original file data
+    for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
+        buffer[i] = (uint8_t)((i*123456791) >> 13);
+    }
+
+    // Benchmark each library
+    occupy_cpu_core();
+    cm256_benchmark_main(params, buffer);
 
     return 0;
 }
