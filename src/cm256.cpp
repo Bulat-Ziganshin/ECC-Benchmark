@@ -117,13 +117,10 @@ bool cm256_benchmark_decode_all_blocks(
 // Benchmark library and print results, return false if anything failed
 bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
 {
-    // Places for original and parity data
-    auto originalFileData = buffer;
-    auto recoveryBlocks   = buffer + params.OriginalFileBytes();
+    if (params.OriginalCount + params.RecoveryCount > 256)
+        return false;
 
-    // Total encode/decode times
-    OperationTimer encode_time, decode_one_time, decode_all_time;
-
+    // Initialize library and choose CPU SIMD extension to use
     if (cm256_init()) {
         printf("cm256_init failed\n");
         return false;
@@ -143,6 +140,14 @@ bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         CpuHasNeon? "neon":
 #endif
         "", sizeof(size_t)*8);
+
+
+    // Places for original and parity data
+    auto originalFileData = buffer;
+    auto recoveryBlocks   = buffer + params.OriginalFileBytes();
+
+    // Total encode/decode times
+    OperationTimer encode_time, decode_one_time, decode_all_time;
 
     // Repeat benchmark multiple times to improve its accuracy
     for (int trial = 0; trial < params.Trials; ++trial)
