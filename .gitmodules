@@ -1,3 +1,6 @@
 [submodule "external/cm256"]
 	path = external/cm256
 	url = https://github.com/catid/cm256
+[submodule "external/leopard"]
+	path = external/leopard
+	url = https://github.com/catid/leopard
