@@ -1,3 +1,7 @@
+//
+// Benchmarking CM256 library: https://github.com/catid/cm256
+//
+
 #include <cstdio>
 #include <memory>
 
@@ -110,7 +114,7 @@ bool cm256_benchmark_decode_all_blocks(
 }
 
 
-// Benchmark CM256 library and print results, return false if anything failed
+// Benchmark library and print results, return false if anything failed
 bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
 {
     // Places for original and parity data
@@ -125,7 +129,7 @@ bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         return false;
     }
 
-    // Print CPU SIMD extensions used to accelerate CM256 in this run
+    // Print CPU SIMD extensions used to accelerate library in this run
     // (depends on compilation options such as -mavx2 and actual CPU)
     printf("CM256 (%s, %d-bit):\n",
 #ifndef GF256_TARGET_MOBILE

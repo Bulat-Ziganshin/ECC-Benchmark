@@ -17,6 +17,10 @@ struct ECC_bench_params : cm256_encoder_params
 
 // Benchmark each library and print results, return false if anything failed
 bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer);
+bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer);
+
+// Extra workspace used by library on top of place required for original and parity data
+size_t leopard_extra_space(ECC_bench_params params);
 
 
 //-----------------------------------------------------------------------------

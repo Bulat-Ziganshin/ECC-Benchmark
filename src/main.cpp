@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
     // Alloc single buffer large enough for any operation in any tested library
     size_t bufsize = params.OriginalFileBytes() + params.RecoveryDataBytes()
-                     ;
+                     + leopard_extra_space(params);
     auto buffer = new uint8_t[bufsize + SSE_ALIGNMENT];
 
     // Align buffer start to SSE-compatible boundary
@@ -78,6 +78,7 @@ int main(int argc, char** argv)
     // Benchmark each library
     occupy_cpu_core();
     cm256_benchmark_main(params, buffer);
+    leopard_benchmark_main(params, buffer);
 
     return 0;
 }
