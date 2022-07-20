@@ -4,3 +4,6 @@
 [submodule "external/leopard"]
 	path = external/leopard
 	url = https://github.com/catid/leopard
+[submodule "external/FastECC"]
+	path = external/FastECC
+	url = https://github.com/Bulat-Ziganshin/FastECC
