@@ -60,6 +60,36 @@ bool leopard_benchmark_encode(
 }
 
 
+// Perform single decoding operation, return false if it fails
+bool leopard_benchmark_decode(
+    ECC_bench_params params,
+    size_t decode_work_count,
+    void** originalFileData_losing_one,
+    void** recoveryBlocks,
+    void** decoderWorkArea,
+    OperationTimer& decode_time)
+{
+    decode_time.BeginCall();
+    LeopardResult decodeResult = leo_decode(
+        params.BlockBytes,
+        params.OriginalCount,
+        params.RecoveryCount,
+        decode_work_count,
+        originalFileData_losing_one,
+        recoveryBlocks,
+        decoderWorkArea);
+    decode_time.EndCall();
+
+    if (decodeResult != Leopard_Success)
+    {
+        printf("  leo_decode-one failed: %s\n", leo_result_string(decodeResult));
+        return false;
+    }
+
+    return true;
+}
+
+
 // Benchmark library and print results, return false if anything failed
 bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer)
 {
@@ -94,11 +124,17 @@ bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer)
 
     // Pointers to data
     std::vector<uint8_t*> original_data(params.OriginalCount);
+    std::vector<uint8_t*> original_data_losing_one(params.OriginalCount);
+    std::vector<uint8_t*> original_data_losing_most_possible(params.OriginalCount);
     std::vector<uint8_t*> encode_work_data(encode_work_count);
     std::vector<uint8_t*> decode_work_data(decode_work_count);
 
     for (unsigned i = 0; i < params.OriginalCount; ++i) {
         original_data[i] = buffer;
+        // Lose only the first block
+        original_data_losing_one[i] = (i==0? nullptr : buffer);
+        // Lose up to RecoveryCount blocks
+        original_data_losing_most_possible[i] = (i < params.RecoveryCount? nullptr : buffer);
         buffer += params.BlockBytes;
     }
     for (unsigned i = 0; i < encode_work_count; ++i) {
@@ -110,21 +146,37 @@ bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         buffer += params.BlockBytes;
     }
 
+    // It's exactly like original_data[] bit with the first block lost
+    // so we have to repair it
+    original_data_losing_one[0] = nullptr;
+
+    void** originalFileData = (void**)&original_data[0];
+    void** recoveryBlocks   = (void**)&encode_work_data[0];   // recovery data written here
+    void** decoderWorkArea  = (void**)&decode_work_data[0];
+    void** originalFileData_losing_one = (void**)&original_data_losing_one[0];
+    void** originalFileData_losing_most_possible = (void**)&original_data_losing_most_possible[0];
+
     // Repeat benchmark multiple times to improve its accuracy
     for (int trial = 0; trial < params.Trials; ++trial)
     {
-        if (! leopard_benchmark_encode(
-                    params,
-                    encode_work_count,
-                    (void**)&original_data[0],
-                    (void**)&encode_work_data[0], // recovery data written here
-                    encode_time)) {
+        if (! leopard_benchmark_encode(params, encode_work_count,
+                originalFileData, recoveryBlocks, encode_time)) {
+            return false;
+        }
+        if (! leopard_benchmark_decode(params, decode_work_count,
+                originalFileData_losing_one, recoveryBlocks, decoderWorkArea, decode_one_time)) {
+            return false;
+        }
+        if (! leopard_benchmark_decode(params, decode_work_count,
+                originalFileData_losing_most_possible, recoveryBlocks, decoderWorkArea, decode_all_time)) {
             return false;
         }
     }
 
     // Benchmark reports for each operation
     encode_time.Print("encode", params.OriginalFileBytes());
+    decode_one_time.Print("decode one", params.BlockBytes);
+    decode_all_time.Print("decode all", params.RecoveryDataBytes());
 
     return true;
 }
