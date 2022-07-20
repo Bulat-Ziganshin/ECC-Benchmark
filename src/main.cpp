@@ -60,8 +60,10 @@ int main(int argc, char** argv)
     ECC_bench_params params = parse_cmdline(argc, argv);
 
     // Alloc single buffer large enough for any operation in any tested library
-    size_t bufsize = params.OriginalFileBytes() + params.RecoveryDataBytes()
-                     + leopard_extra_space(params);
+    size_t bufsize = params.OriginalFileBytes() +
+                         std::max(params.RecoveryDataBytes(),   // CM256 extra space
+                         std::max(leopard_extra_space(params),
+                                  fastecc_extra_space(params)));
     auto buffer = new uint8_t[bufsize + BUFSIZE_ALIGNMENT];
 
     // Align buffer start for compatibility with all benchmarked libraries
@@ -79,6 +81,7 @@ int main(int argc, char** argv)
     occupy_cpu_core();
     cm256_benchmark_main(params, buffer);
     leopard_benchmark_main(params, buffer);
+    fastecc_benchmark_main(params, buffer);
 
     return 0;
 }

@@ -1,2 +1,2 @@
-g++ -mavx2 -o bench_avx2 -mtune=skylake -O2 -s main.cpp cm256.cpp benchmark_leopard.cpp -I../external/leopard -I../external/cm256/include ../external/cm256/src/cm256.cpp
-g++ -msse4 -o bench_sse4 -mtune=skylake -O2 -s main.cpp cm256.cpp benchmark_leopard.cpp -I../external/leopard -I../external/cm256/include ../external/cm256/src/cm256.cpp
+g++ -o bench_avx2 -mavx2 -DSIMD=AVX2 -mtune=skylake -O3 -s main.cpp cm256.cpp ../external/cm256/src/cm256.cpp benchmark_leopard.cpp benchmark_fastecc.cpp -I../external/cm256/include -I../external/leopard -I../external/FastECC
+g++ -o bench_sse4 -msse4 -DSIMD=SSE2 -mtune=skylake -O3 -s main.cpp cm256.cpp ../external/cm256/src/cm256.cpp benchmark_leopard.cpp benchmark_fastecc.cpp -I../external/cm256/include -I../external/leopard -I../external/FastECC

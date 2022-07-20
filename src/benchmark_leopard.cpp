@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <memory>
 
+#include "common.h"
+
 #include "LeopardFF8.cpp"
 #undef LEO_MUL_128
 #undef LEO_MULADD_128
@@ -18,15 +20,13 @@
 #include "LeopardCommon.cpp"
 #include "leopard.cpp"
 
-#include "common.h"
 
-
-// Extra workspace used by library on top of place required for original and parity data
+// Extra workspace used by the library on top of place required for original data
 size_t leopard_extra_space(ECC_bench_params params)
 {
     size_t encode_work_count = leo_encode_work_count(params.OriginalCount, params.RecoveryCount);
     size_t decode_work_count = leo_decode_work_count(params.OriginalCount, params.RecoveryCount);
-    return params.BlockBytes * (encode_work_count + decode_work_count - params.RecoveryCount);
+    return params.BlockBytes * (encode_work_count + decode_work_count);
 }
 
 

@@ -18,9 +18,11 @@ struct ECC_bench_params : cm256_encoder_params
 // Benchmark each library and print results, return false if anything failed
 bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer);
+bool fastecc_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 
-// Extra workspace used by library on top of place required for original and parity data
+// Extra workspace used by each library on top of place required for original data
 size_t leopard_extra_space(ECC_bench_params params);
+size_t fastecc_extra_space(ECC_bench_params params);
 
 
 //-----------------------------------------------------------------------------
@@ -64,3 +66,14 @@ public:
     uint64_t MinCallUsec = 0;
 };
 
+
+// Round x up to 2^i
+inline uint64_t NextPow2(uint64_t x)
+{
+	if (x == 0)  return 0;
+	if (x == 1)  return 1;
+	int i = 1;
+	for (x--; x/=2; i++)
+		;
+	return uint64_t(1) << i;
+}
