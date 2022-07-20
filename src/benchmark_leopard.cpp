@@ -71,6 +71,12 @@ bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         return false;
     }
 
+    size_t encode_work_count = leo_encode_work_count(params.OriginalCount, params.RecoveryCount);
+    size_t decode_work_count = leo_decode_work_count(params.OriginalCount, params.RecoveryCount);
+
+    if (encode_work_count == 0)  // 0 means unsupported data+parity combination
+        return false;
+
     // Print CPU SIMD extensions used to accelerate library in this run
     // (depends on compilation options such as -mavx2 and actual CPU)
     printf("Leopard (%s, %d-bit):\n",
@@ -85,10 +91,6 @@ bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         leopard::CpuHasNeon? "neon":
 #endif
         "", sizeof(size_t)*8);
-
-
-    size_t encode_work_count = leo_encode_work_count(params.OriginalCount, params.RecoveryCount);
-    size_t decode_work_count = leo_decode_work_count(params.OriginalCount, params.RecoveryCount);
 
     // Pointers to data
     std::vector<uint8_t*> original_data(params.OriginalCount);

@@ -4,7 +4,7 @@
 
 #include "../unit_test/SiameseTools.cpp"
 
-#define SSE_ALIGNMENT 16
+#define BUFSIZE_ALIGNMENT 64  /* at least 16 for SSE intrinsics, and at least 64 for Leopard */
 #define align_up(value, ALIGNMENT) ((((value) + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
 
 
@@ -31,8 +31,8 @@ ECC_bench_params parse_cmdline(int argc, char** argv)
     if (argc>3)  params.BlockBytes    = atoi(argv[3]);
     if (argc>4)  params.Trials        = atoi(argv[4]);
 
-    // Round up for SSE compatibility
-    params.BlockBytes = align_up(params.BlockBytes, SSE_ALIGNMENT);
+    // Round up for compatibility with all benchmarked libraries
+    params.BlockBytes = align_up(params.BlockBytes, BUFSIZE_ALIGNMENT);
 
     printf("Params: data_blocks=%d parity_blocks=%d chunk_size=%d trials=%d\n",
         params.OriginalCount, params.RecoveryCount, params.BlockBytes, params.Trials);
@@ -62,10 +62,10 @@ int main(int argc, char** argv)
     // Alloc single buffer large enough for any operation in any tested library
     size_t bufsize = params.OriginalFileBytes() + params.RecoveryDataBytes()
                      + leopard_extra_space(params);
-    auto buffer = new uint8_t[bufsize + SSE_ALIGNMENT];
+    auto buffer = new uint8_t[bufsize + BUFSIZE_ALIGNMENT];
 
-    // Align buffer start to SSE-compatible boundary
-    buffer = (uint8_t*) align_up(uintptr_t(buffer), SSE_ALIGNMENT);
+    // Align buffer start for compatibility with all benchmarked libraries
+    buffer = (uint8_t*) align_up(uintptr_t(buffer), BUFSIZE_ALIGNMENT);
 
     // Fill place allocated for the file contents with random numbers.
     // It's critical to fill it with non-repeating data
