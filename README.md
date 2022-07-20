@@ -5,8 +5,8 @@ We plan to compare:
   - [x] [CM256](https://github.com/catid/cm256) - GF(2^8)
   - [ ] [Intel ISA-L](https://github.com/intel/isa-l) - GF(2^8)
 - O(N*log(N)) Reed-Solomon codecs:
-  - [ ] [Leopard](https://github.com/catid/leopard) - uses [FWHT](https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform) in GF(2^8) or GF(2^16), up to 2^16 blocks, data blocks >= parity blocks
-  - [ ] [FastECC](https://github.com/Bulat-Ziganshin/FastECC) - uses FFT in GF(p), up to 2^63 blocks
+  - [x] [Leopard](https://github.com/catid/leopard) - uses [FWHT](https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform) in GF(2^8) or GF(2^16), up to 2^16 blocks, data blocks >= parity blocks
+  - [x] [FastECC](https://github.com/Bulat-Ziganshin/FastECC) - uses FFT in GF(p), up to 2^63 blocks
 - O(N) non-MDS codecs:
   - [ ] [Wirehair](https://github.com/catid/wirehair) - fountain code, up to 64000 data blocks
 
@@ -47,6 +47,65 @@ CM256:
 | 50+50    |     346 MB/s |      339 MB/s |      352 MB/s |
 | 80+20    |     882 MB/s |      212 MB/s |      219 MB/s |
 | 20+20    |     892 MB/s |      866 MB/s |      892 MB/s |
+
+Some raw data with AVX2:
+```
+D:\>bench_avx2.exe 50 50 16384 1000
+Params: data_blocks=50 parity_blocks=50 chunk_size=16384 trials=1000
+CM256 (avx2, 64-bit):
+  encode: 1249 usec, 656 MB/s
+  decode one: 26 usec, 639 MB/s
+  decode all: 1114 usec, 736 MB/s
+Leopard (avx2, 64-bit):
+  encode: 206 usec, 3971 MB/s
+  decode one: 566 usec, 29 MB/s
+  decode all: 639 usec, 1282 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 1245 usec, 658 MB/s
+
+D:\>bench_avx2.exe 80 20 16384 1000
+Params: data_blocks=80 parity_blocks=20 chunk_size=16384 trials=1000
+CM256 (avx2, 64-bit):
+  encode: 813 usec, 1612 MB/s
+  decode one: 43 usec, 385 MB/s
+  decode all: 717 usec, 457 MB/s
+Leopard (avx2, 64-bit):
+  encode: 220 usec, 5959 MB/s
+  decode one: 565 usec, 29 MB/s
+  decode all: 587 usec, 558 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 3072 usec, 427 MB/s
+```
+
+and with SSSE3:
+```
+
+D:\!src\GitHub\ECC-Benchmark\src>bench_sse4.exe 50 50 16384 1000
+Params: data_blocks=50 parity_blocks=50 chunk_size=16384 trials=1000
+CM256 (ssse3, 64-bit):
+  encode: 2501 usec, 328 MB/s
+  decode one: 51 usec, 319 MB/s
+  decode all: 2476 usec, 331 MB/s
+Leopard (ssse3, 64-bit):
+  encode: 389 usec, 2103 MB/s
+  decode one: 945 usec, 17 MB/s
+  decode all: 1068 usec, 767 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 1867 usec, 439 MB/s
+
+D:\!src\GitHub\ECC-Benchmark\src>bench_sse4.exe 80 20 16384 1000
+Params: data_blocks=80 parity_blocks=20 chunk_size=16384 trials=1000
+CM256 (ssse3, 64-bit):
+  encode: 1556 usec, 842 MB/s
+  decode one: 81 usec, 203 MB/s
+  decode all: 1563 usec, 210 MB/s
+Leopard (ssse3, 64-bit):
+  encode: 383 usec, 3426 MB/s
+  decode one: 953 usec, 17 MB/s
+  decode all: 979 usec, 335 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 4659 usec, 281 MB/s
+```
 
 
 ## Conclusions
