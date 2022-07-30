@@ -7,3 +7,6 @@
 [submodule "external/FastECC"]
 	path = external/FastECC
 	url = https://github.com/Bulat-Ziganshin/FastECC
+[submodule "external/wirehair"]
+	path = external/wirehair
+	url = https://github.com/catid/wirehair
