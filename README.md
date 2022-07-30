@@ -166,6 +166,29 @@ FastECC 0xfff00001 32-bit
 
 ## Conclusions
 
+### Encoding speed
+
+O(N^2) algorithms encoding speed reported in THIS benchmark
+is O(1/number_of_parity_words). It's why:
+
+So-called O(N^2) algorithms really are `O(M*K)`.
+It's because the RS matrix algo multiples vector of M words (input data)
+by `K*M` matrix and gets vector of K words (parity),
+which requires `K*M` multiplications and additions.
+
+When you have any `O(K*M)` algo with M input words and K output words,
+you can say that its speed is O(1/K) relative to input data processed
+or O(1/M) relative to output data produced :slight_smile:
+This benchmark reports encoding speed relative to input data size,
+so matrix RS algos speed is O(1/number_of_parity_words)
+
+As of cache effects, I optimized the chunk size for each M+K setting
+to reach best results. For larger codewords it means smaller chunks
+and thus a bit higher overheads, but effect was within 1%
+(i.e. for 20+20 I used 64KB blocks, but even with 4KB blocks
+it will be only 10% slower)
+
+
 ### Recovery speed
 
 In O(N^2) RS algos, recovery of multiple blocks is just
