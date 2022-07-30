@@ -19,6 +19,7 @@ struct ECC_bench_params : cm256_encoder_params
 bool cm256_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 bool leopard_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 bool fastecc_benchmark_main(ECC_bench_params params, uint8_t* buffer);
+bool wirehair_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 
 // Extra workspace used by each library on top of place required for original data
 size_t leopard_extra_space(ECC_bench_params params);

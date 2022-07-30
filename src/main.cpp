@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
     // Alloc single buffer large enough for any operation in any tested library
     size_t bufsize = params.OriginalFileBytes() +
-                         std::max(params.RecoveryDataBytes(),   // CM256 extra space
+                         std::max(params.RecoveryDataBytes(),   // CM256,Wirehair extra space
                          std::max(leopard_extra_space(params),
                                   fastecc_extra_space(params)));
     auto buffer = new uint8_t[bufsize + BUFSIZE_ALIGNMENT];
@@ -82,6 +82,7 @@ int main(int argc, char** argv)
     cm256_benchmark_main(params, buffer);
     leopard_benchmark_main(params, buffer);
     fastecc_benchmark_main(params, buffer);
+    wirehair_benchmark_main(params, buffer);
 
     return 0;
 }
