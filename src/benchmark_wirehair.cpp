@@ -128,11 +128,20 @@ recover:
         return false;
     }
 
+/* Altenatively, we can recover the entire original data that works only slightly slower
+   (probably because it memcpy's more data):
+
+    WirehairResult recoverResult = wirehair_recover(
+        decoder,                    // Pointer to codec from wirehair_decoder_create()
+        originalFileData,           // Buffer where reconstructed message will be written
+        params.OriginalFileBytes()  // Bytes in the message
+    );
+*/
     return true;
 }
 
 
-// Perform single operation decoding single lost block, return false if it fails
+// Perform single operation decoding as much blocks as possible, return false if it fails
 bool wirehair_benchmark_decode_all_blocks(
     ECC_bench_params params,
     uint8_t* originalFileData,
@@ -153,9 +162,9 @@ bool wirehair_benchmark_decode_all_blocks(
     auto blockSize = params.BlockBytes;
 
 
-    // Simulate loss of the first data block,
-    // using instead as much recovery blocks as required by the codec
-    for (int blockId = 1; blockId < params.OriginalCount + params.RecoveryCount; ++blockId)
+    // Simulate loss of as much data blocks as possible,
+    // using instead all the recovery blocks available
+    for (int blockId = params.OriginalCount + params.RecoveryCount; --blockId > 0 ; )
     {
         auto blockPtr = originalFileData + blockId * blockSize;
 
@@ -183,7 +192,7 @@ bool wirehair_benchmark_decode_all_blocks(
 
 
 recover:
-    // Now let's recover entire buffer (even if we need only the first data block)
+    // Now let's recover the entire buffer
     WirehairResult recoverResult = wirehair_recover(
         decoder,                    // Pointer to codec from wirehair_decoder_create()
         originalFileData,           // Buffer where reconstructed message will be written
@@ -191,7 +200,7 @@ recover:
     );
 
     if (recoverResult != Wirehair_Success) {
-        printf("wirehair_recover_block failed: %s\n", wirehair_result_string(recoverResult));
+        printf("wirehair_recover failed: %s\n", wirehair_result_string(recoverResult));
         return false;
     }
 
@@ -243,7 +252,7 @@ bool wirehair_benchmark_main(ECC_bench_params params, uint8_t* buffer)
     // Benchmark reports for each operation
     encode_time.Print("encode", params.OriginalFileBytes());
     decode_one_time.Print("decode one", params.BlockBytes);
-    decode_all_time.Print("decode all", params.BlockBytes);
+    decode_all_time.Print("decode all", params.RecoveryDataBytes());
 
     return true;
 }
