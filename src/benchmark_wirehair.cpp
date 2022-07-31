@@ -217,10 +217,20 @@ bool wirehair_benchmark_main(ECC_bench_params params, uint8_t* buffer)
         printf("wirehair_init failed: %s\n", wirehair_result_string(initResult));
         return false;
     }
-    WirehairCodec encoder = nullptr, decoder_one = nullptr, decoder_all = nullptr;
 
     // Introduce himself
     printf("Wirehair (%d-bit):\n", sizeof(size_t)*8);
+
+    // Automatically free codecs memory
+    struct FreeCodecs{
+        WirehairCodec encoder = nullptr, decoder_one = nullptr, decoder_all = nullptr;
+        ~FreeCodecs() {
+            wirehair_free(encoder);
+            wirehair_free(decoder_one);
+            wirehair_free(decoder_all);
+        }
+    } codecs;
+
 
     // Places for original and parity data
     auto originalFileData = buffer;
@@ -233,17 +243,17 @@ bool wirehair_benchmark_main(ECC_bench_params params, uint8_t* buffer)
     for (int trial = 0; trial < params.Trials; ++trial)
     {
         encode_time.BeginCall();
-        if (! wirehair_benchmark_encode(params, originalFileData, recoveryBlocks, encoder)) {
+        if (! wirehair_benchmark_encode(params, originalFileData, recoveryBlocks, codecs.encoder)) {
             return false;
         }
         encode_time.EndCall();
         decode_one_time.BeginCall();
-        if (! wirehair_benchmark_decode_one_block(params, originalFileData, recoveryBlocks, decoder_one)) {
+        if (! wirehair_benchmark_decode_one_block(params, originalFileData, recoveryBlocks, codecs.decoder_one)) {
             return false;
         }
         decode_one_time.EndCall();
         decode_all_time.BeginCall();
-        if (! wirehair_benchmark_decode_all_blocks(params, originalFileData, recoveryBlocks, decoder_all)) {
+        if (! wirehair_benchmark_decode_all_blocks(params, originalFileData, recoveryBlocks, codecs.decoder_all)) {
             return false;
         }
         decode_all_time.EndCall();
