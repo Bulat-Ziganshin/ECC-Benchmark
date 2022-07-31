@@ -7,33 +7,33 @@ We plan to compare:
 - O(N*log(N)) Reed-Solomon codecs:
   - [x] [Leopard](https://github.com/catid/leopard) - uses [FWHT](https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform) in GF(2^8) or GF(2^16), up to 2^16 blocks, data blocks >= parity blocks
   - [x] [FastECC](https://github.com/Bulat-Ziganshin/FastECC) - uses FFT in GF(p), up to 2^20 blocks
-- O(N) non-MDS codecs:
-  - [ ] [Wirehair](https://github.com/catid/wirehair) - fountain code, up to 64000 data blocks
+- O(N) non-MDS codec:
+  - [x] [Wirehair](https://github.com/catid/wirehair) - fountain code, up to 64000 data blocks
 
 SIMD usage:
 - CM256, Leopard and Wirehair provides AVX2/SSSE3/Neon64/Neon-optimized code paths
 - Intel ISA-L provides AVX512/AVX2/AVX/SSSE3/Neon/SVE/VSX-optimized code paths
 - FastECC provides AVX2/SSE2-optimized code paths
 
-So far, the benchmark is single-threaded. Leopard and FastECC have built-in OpenMP support, which may be enabled in later benchmark versions.
+So far, the benchmark is single-threaded. Leopard and FastECC have built-in OpenMP support, which may be enabled by adding `-fopenmp` to the compilation commands.
 
 
 ## Results
 
 Notes:
 - 80+20 means 80 data blocks and 20 parity blocks
-- Every speed is represented by the best runs among multiple experiments
-- Each program run involves multiple "trials", 1000 by default, and we compute average time of trial.
-And on top of them, I run the program multiple times, choosing best result for each cell in CM256 table.
-Raw results after the tables are single runs, just for quick conclusions
 - Encoding speeds are measured in terms of original data processed
 - Decoding speeds are measured in terms of recovered data produced:
   - first test recovers single block, so `speed = one block size / time`
   - second test recovers as much blocks as code can do, so `speed = size of all parity blocks / time`
-- Block sizes for each run were optimized to fit all data into L3 cache, but no more than 64 KB
+- Each program run involves multiple "trials", 1000 by default, and we compute average time of trial
+  - Formatted results are represented by the best runs among multiple experiments
+  - Raw results are the single runs, just for quick comparison
+- Block sizes for each run were optimized to fit all data into L3 cache, but fixed to 4 KB for large codewords
+- Benchmark CPU is i7-8665U (4C/8T Skylake running at 3.3-4.5 GHz)
 
 
-### Results on i7-8665U (skylake running at 3.3-4.5 GHz)
+### Formatted results of CM256
 
 CM256:
 
@@ -51,7 +51,9 @@ CM256:
 | 80+20    |     882 MB/s |      212 MB/s |      219 MB/s |
 | 20+20    |     892 MB/s |      866 MB/s |      892 MB/s |
 
-Some raw data with AVX2:
+
+### Raw results with AVX2
+
 ```
 D:\>bench_avx2 200 50 16384 100
 Params: data_blocks=200 parity_blocks=50 chunk_size=16384 trials=100
@@ -122,7 +124,9 @@ Wirehair (64-bit):
   decode all: 1808 usec, 725 MB/s
 ```
 
-and with SSSE3:
+
+### Raw results with SSSE3
+
 ```
 D:\>bench_sse4 200 50 16384 100
 Params: data_blocks=200 parity_blocks=50 chunk_size=16384 trials=100
@@ -191,6 +195,66 @@ Wirehair (64-bit):
   encode: 2267 usec, 578 MB/s
   decode one: 2087 usec, 31 MB/s
   decode all: 2341 usec, 560 MB/s
+```
+
+
+### Raw results for larger codewords
+
+```
+D:\>bench_avx2 2048 2048 4096 100
+Params: data_blocks=2048 parity_blocks=2048 chunk_size=4096 trials=100
+Leopard (avx2, 64-bit):
+  encode: 8612 usec, 974 MB/s
+  decode one: 18663 usec, 0 MB/s
+  decode all: 21211 usec, 395 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 23819 usec, 352 MB/s
+Wirehair (64-bit):
+  encode: 8301 usec, 1011 MB/s
+  decode one: 6920 usec, 1 MB/s
+  decode all: 9668 usec, 868 MB/s
+
+D:\>bench_avx2 32000 32000 4096 20
+Params: data_blocks=32000 parity_blocks=32000 chunk_size=4096 trials=20
+Leopard (avx2, 64-bit):
+  encode: 216624 usec, 605 MB/s
+  decode one: 427401 usec, 0 MB/s
+  decode all: 515774 usec, 254 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 584607 usec, 224 MB/s
+Wirehair (64-bit):
+  encode: 245237 usec, 534 MB/s
+  decode one: 197916 usec, 0 MB/s
+  decode all: 272011 usec, 482 MB/s
+```
+
+Now the same with OpenMP:
+```
+D:\>bench_avx2_openmp 2048 2048 4096 100
+Params: data_blocks=2048 parity_blocks=2048 chunk_size=4096 trials=100
+Leopard (avx2, 64-bit):
+  encode: 6204 usec, 1352 MB/s
+  decode one: 36027 usec, 0 MB/s
+  decode all: 37741 usec, 222 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 7182 usec, 1168 MB/s
+Wirehair (64-bit):
+  encode: 8446 usec, 993 MB/s
+  decode one: 6943 usec, 1 MB/s
+  decode all: 9709 usec, 864 MB/s
+
+D:\>bench_avx2_openmp 32000 32000 4096 20
+Params: data_blocks=32000 parity_blocks=32000 chunk_size=4096 trials=20
+Leopard (avx2, 64-bit):
+  encode: 206935 usec, 633 MB/s
+  decode one: 880574 usec, 0 MB/s
+  decode all: 963278 usec, 136 MB/s
+FastECC 0xfff00001 32-bit
+  encode: 209445 usec, 626 MB/s
+Wirehair (64-bit):
+  encode: 257553 usec, 509 MB/s
+  decode one: 202161 usec, 0 MB/s
+  decode all: 284040 usec, 461 MB/s
 ```
 
 
