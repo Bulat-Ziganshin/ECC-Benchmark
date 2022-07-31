@@ -53,114 +53,144 @@ CM256:
 
 Some raw data with AVX2:
 ```
-
-D:\>bench_avx2.exe 200 50 16384 100
+D:\>bench_avx2 200 50 16384 100
 Params: data_blocks=200 parity_blocks=50 chunk_size=16384 trials=100
 CM256 (avx2, 64-bit):
-  encode: 5139 usec, 638 MB/s
-  decode one: 114 usec, 144 MB/s
-  decode all: 4627 usec, 177 MB/s
+  encode: 5219 usec, 628 MB/s
+  decode one: 109 usec, 151 MB/s
+  decode all: 4677 usec, 175 MB/s
 Leopard (avx2, 64-bit):
-  encode: 1245 usec, 2632 MB/s
-  decode one: 4490 usec, 4 MB/s
-  decode all: 4309 usec, 190 MB/s
+  encode: 1377 usec, 2379 MB/s
+  decode one: 4574 usec, 4 MB/s
+  decode all: 4401 usec, 186 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 6996 usec, 468 MB/s
+  encode: 7129 usec, 460 MB/s
+Wirehair (64-bit):
+  encode: 2272 usec, 1443 MB/s
+  decode one: 2506 usec, 7 MB/s
+  decode all: 3061 usec, 268 MB/s
 
-D:\>bench_avx2.exe 50 50 16384 1000
+D:\>bench_avx2 50 50 16384 1000
 Params: data_blocks=50 parity_blocks=50 chunk_size=16384 trials=1000
 CM256 (avx2, 64-bit):
-  encode: 1249 usec, 656 MB/s
-  decode one: 26 usec, 639 MB/s
-  decode all: 1114 usec, 736 MB/s
+  encode: 1306 usec, 627 MB/s
+  decode one: 27 usec, 606 MB/s
+  decode all: 1182 usec, 693 MB/s
 Leopard (avx2, 64-bit):
-  encode: 206 usec, 3971 MB/s
-  decode one: 566 usec, 29 MB/s
-  decode all: 639 usec, 1282 MB/s
+  encode: 228 usec, 3593 MB/s
+  decode one: 599 usec, 27 MB/s
+  decode all: 673 usec, 1218 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 1245 usec, 658 MB/s
+  encode: 1324 usec, 619 MB/s
+Wirehair (64-bit):
+  encode: 603 usec, 1360 MB/s
+  decode one: 527 usec, 31 MB/s
+  decode all: 678 usec, 1209 MB/s
 
-D:\>bench_avx2.exe 80 20 16384 1000
+D:\>bench_avx2 80 20 16384 1000
 Params: data_blocks=80 parity_blocks=20 chunk_size=16384 trials=1000
 CM256 (avx2, 64-bit):
-  encode: 813 usec, 1612 MB/s
-  decode one: 43 usec, 385 MB/s
-  decode all: 717 usec, 457 MB/s
+  encode: 851 usec, 1540 MB/s
+  decode one: 44 usec, 370 MB/s
+  decode all: 755 usec, 434 MB/s
 Leopard (avx2, 64-bit):
-  encode: 220 usec, 5959 MB/s
-  decode one: 565 usec, 29 MB/s
-  decode all: 587 usec, 558 MB/s
+  encode: 239 usec, 5485 MB/s
+  decode one: 594 usec, 28 MB/s
+  decode all: 620 usec, 529 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 3072 usec, 427 MB/s
+  encode: 3227 usec, 406 MB/s
+Wirehair (64-bit):
+  encode: 977 usec, 1342 MB/s
+  decode one: 1069 usec, 15 MB/s
+  decode all: 1225 usec, 268 MB/s
 
-D:\>bench_avx2.exe 20 20 65536 500
+D:\>bench_avx2 20 20 65536 500
 Params: data_blocks=20 parity_blocks=20 chunk_size=65536 trials=500
 CM256 (avx2, 64-bit):
-  encode: 819 usec, 1601 MB/s
-  decode one: 42 usec, 1560 MB/s
-  decode all: 833 usec, 1574 MB/s
+  encode: 1230 usec, 1066 MB/s
+  decode one: 62 usec, 1053 MB/s
+  decode all: 1238 usec, 1059 MB/s
 Leopard (avx2, 64-bit):
-  encode: 432 usec, 3031 MB/s
-  decode one: 1105 usec, 59 MB/s
-  decode all: 1116 usec, 1174 MB/s
+  encode: 586 usec, 2235 MB/s
+  decode one: 1536 usec, 43 MB/s
+  decode all: 1571 usec, 834 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 2023 usec, 648 MB/s
+  encode: 2378 usec, 551 MB/s
+Wirehair (64-bit):
+  encode: 1643 usec, 798 MB/s
+  decode one: 1579 usec, 41 MB/s
+  decode all: 1808 usec, 725 MB/s
 ```
 
 and with SSSE3:
 ```
-D:\>bench_sse4.exe 200 50 16384 100
+D:\>bench_sse4 200 50 16384 100
 Params: data_blocks=200 parity_blocks=50 chunk_size=16384 trials=100
 CM256 (ssse3, 64-bit):
-  encode: 9877 usec, 332 MB/s
-  decode one: 201 usec, 82 MB/s
-  decode all: 9737 usec, 84 MB/s
+  encode: 11353 usec, 289 MB/s
+  decode one: 233 usec, 70 MB/s
+  decode all: 11088 usec, 74 MB/s
 Leopard (ssse3, 64-bit):
-  encode: 2154 usec, 1521 MB/s
-  decode one: 6282 usec, 3 MB/s
-  decode all: 6242 usec, 131 MB/s
+  encode: 2558 usec, 1281 MB/s
+  decode one: 7345 usec, 2 MB/s
+  decode all: 7490 usec, 109 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 10497 usec, 312 MB/s
+  encode: 11768 usec, 278 MB/s
+Wirehair (64-bit):
+  encode: 2955 usec, 1109 MB/s
+  decode one: 3164 usec, 5 MB/s
+  decode all: 3615 usec, 227 MB/s
 
-D:\>bench_sse4.exe 50 50 16384 1000
+D:\>bench_sse4 50 50 16384 1000
 Params: data_blocks=50 parity_blocks=50 chunk_size=16384 trials=1000
 CM256 (ssse3, 64-bit):
-  encode: 2501 usec, 328 MB/s
-  decode one: 51 usec, 319 MB/s
-  decode all: 2476 usec, 331 MB/s
+  encode: 2731 usec, 300 MB/s
+  decode one: 56 usec, 292 MB/s
+  decode all: 2719 usec, 301 MB/s
 Leopard (ssse3, 64-bit):
-  encode: 389 usec, 2103 MB/s
-  decode one: 945 usec, 17 MB/s
-  decode all: 1068 usec, 767 MB/s
+  encode: 460 usec, 1781 MB/s
+  decode one: 1131 usec, 14 MB/s
+  decode all: 1268 usec, 646 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 1867 usec, 439 MB/s
+  encode: 2123 usec, 386 MB/s
+Wirehair (64-bit):
+  encode: 970 usec, 844 MB/s
+  decode one: 828 usec, 20 MB/s
+  decode all: 1051 usec, 780 MB/s
 
-D:\>bench_sse4.exe 80 20 16384 1000
+D:\>bench_sse4 80 20 16384 1000
 Params: data_blocks=80 parity_blocks=20 chunk_size=16384 trials=1000
 CM256 (ssse3, 64-bit):
-  encode: 1556 usec, 842 MB/s
-  decode one: 81 usec, 203 MB/s
-  decode all: 1563 usec, 210 MB/s
+  encode: 1689 usec, 776 MB/s
+  decode one: 88 usec, 187 MB/s
+  decode all: 1699 usec, 193 MB/s
 Leopard (ssse3, 64-bit):
-  encode: 383 usec, 3426 MB/s
-  decode one: 953 usec, 17 MB/s
-  decode all: 979 usec, 335 MB/s
+  encode: 436 usec, 3006 MB/s
+  decode one: 1115 usec, 15 MB/s
+  decode all: 1152 usec, 284 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 4659 usec, 281 MB/s
+  encode: 4840 usec, 271 MB/s
+Wirehair (64-bit):
+  encode: 1192 usec, 1100 MB/s
+  decode one: 1275 usec, 13 MB/s
+  decode all: 1408 usec, 233 MB/s
 
-D:\>bench_sse4.exe 20 20 65536 500
+D:\>bench_sse4 20 20 65536 500
 Params: data_blocks=20 parity_blocks=20 chunk_size=65536 trials=500
 CM256 (ssse3, 64-bit):
-  encode: 1506 usec, 870 MB/s
-  decode one: 77 usec, 847 MB/s
-  decode all: 1500 usec, 874 MB/s
+  encode: 1872 usec, 700 MB/s
+  decode one: 97 usec, 674 MB/s
+  decode all: 1864 usec, 703 MB/s
 Leopard (ssse3, 64-bit):
-  encode: 682 usec, 1923 MB/s
-  decode one: 1734 usec, 38 MB/s
-  decode all: 1835 usec, 714 MB/s
+  encode: 866 usec, 1514 MB/s
+  decode one: 2250 usec, 29 MB/s
+  decode all: 2377 usec, 551 MB/s
 FastECC 0xfff00001 32-bit
-  encode: 3066 usec, 427 MB/s
-
+  encode: 3749 usec, 350 MB/s
+Wirehair (64-bit):
+  encode: 2267 usec, 578 MB/s
+  decode one: 2087 usec, 31 MB/s
+  decode all: 2341 usec, 560 MB/s
 ```
 
 
