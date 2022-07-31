@@ -8,11 +8,32 @@
 #define align_up(value, ALIGNMENT) ((((value) + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
 
 
-// Parse ECC parameters from cmdline
-ECC_bench_params parse_cmdline(int argc, char** argv)
-{
-    ECC_bench_params params;
+// Benchmark parameters set at cmdline
+ECC_bench_params params;
 
+// Currently benchmarked library
+const char *library = "";
+
+// File to save benchmark results
+FILE* logfile = NULL;
+
+// Write benchmark results to logfile
+void write_to_logfile(const char* operation, int invocations, double microseconds_per_call, double megabytes_per_second)
+{
+    if (logfile)
+    {
+        fprintf(logfile, "%d,%d,%d,%s,%s,%d,%lf,%lf\n",
+            params.OriginalCount, params.RecoveryCount, params.BlockBytes,
+            library, operation,
+            invocations, microseconds_per_call, megabytes_per_second);
+        fflush(logfile);
+    }
+}
+
+
+// Parse ECC parameters from cmdline
+void parse_cmdline(int argc, char** argv)
+{
     // Number of blocks
     params.OriginalCount = 50;
 
@@ -25,19 +46,18 @@ ECC_bench_params parse_cmdline(int argc, char** argv)
     // Repeat benchmark multiple times to improve its accuracy
     params.Trials = 1000;
 
-    if (argc==1) printf("Usage: bench data_blocks parity_blocks chunk_size trials\n");
+    if (argc==1) printf("Usage: bench data_blocks parity_blocks chunk_size trials logfile\n");
     if (argc>1)  params.OriginalCount = atoi(argv[1]);
     if (argc>2)  params.RecoveryCount = atoi(argv[2]);
     if (argc>3)  params.BlockBytes    = atoi(argv[3]);
     if (argc>4)  params.Trials        = atoi(argv[4]);
+    if (argc>5)  logfile              = fopen(argv[5],"a");
 
     // Round up for compatibility with all benchmarked libraries
     params.BlockBytes = align_up(params.BlockBytes, BUFSIZE_ALIGNMENT);
 
     printf("Params: data_blocks=%d parity_blocks=%d chunk_size=%d trials=%d\n",
         params.OriginalCount, params.RecoveryCount, params.BlockBytes, params.Trials);
-
-    return params;
 }
 
 
@@ -57,11 +77,11 @@ void occupy_cpu_core()
 int main(int argc, char** argv)
 {
     // Setup benchmark configuration based on cmdline options
-    ECC_bench_params params = parse_cmdline(argc, argv);
+    parse_cmdline(argc, argv);
 
     // Alloc single buffer large enough for any operation in any tested library
     size_t bufsize = params.OriginalFileBytes() +
-                         std::max(params.RecoveryDataBytes(),   // CM256,Wirehair extra space
+                         std::max(params.RecoveryDataBytes(),   // CM256/Wirehair extra space
                          std::max(leopard_extra_space(params),
                                   fastecc_extra_space(params)));
     auto buffer = new uint8_t[bufsize + BUFSIZE_ALIGNMENT];
@@ -71,7 +91,7 @@ int main(int argc, char** argv)
 
     // Fill place allocated for the file contents with random numbers.
     // It's critical to fill it with non-repeating data
-    // since many libraries rely on table lookups
+    // since some libraries rely on table lookups
     // and can get unfair speedup on repeated data.
     for (size_t i = 0; i < params.OriginalFileBytes(); ++i) {
         buffer[i] = (uint8_t)((i*123456791) >> 13);
@@ -79,10 +99,11 @@ int main(int argc, char** argv)
 
     // Benchmark each library
     occupy_cpu_core();
-    cm256_benchmark_main(params, buffer);
-    leopard_benchmark_main(params, buffer);
-    fastecc_benchmark_main(params, buffer);
-    wirehair_benchmark_main(params, buffer);
+    library = "CM256";    cm256_benchmark_main(params, buffer);
+    library = "Leopard";  leopard_benchmark_main(params, buffer);
+    library = "FastECC";  fastecc_benchmark_main(params, buffer);
+    library = "Wirehair"; wirehair_benchmark_main(params, buffer);
 
+    if (logfile)  fclose(logfile);
     return 0;
 }

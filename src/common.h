@@ -25,6 +25,9 @@ bool wirehair_benchmark_main(ECC_bench_params params, uint8_t* buffer);
 size_t leopard_extra_space(ECC_bench_params params);
 size_t fastecc_extra_space(ECC_bench_params params);
 
+// Write benchmark results to logfile
+void write_to_logfile(const char* operation, int invocations, double microseconds_per_call, double megabytes_per_second);
+
 
 //-----------------------------------------------------------------------------
 class OperationTimer
@@ -55,9 +58,10 @@ public:
     }
     void Print(const char* operation, uint64_t bytes_processed_per_call)
     {
-        const double microseconds_per_call = double(TotalUsec) / Invocations;
-        const double megabytes_per_second = bytes_processed_per_call / microseconds_per_call;
+        double microseconds_per_call = double(TotalUsec) / Invocations;
+        double megabytes_per_second = bytes_processed_per_call / microseconds_per_call;
         printf("  %s: %.0lf usec, %.0lf MB/s\n", operation, microseconds_per_call, megabytes_per_second);
+        write_to_logfile(operation, Invocations, microseconds_per_call, megabytes_per_second);
     }
 
     uint64_t t0 = 0;
